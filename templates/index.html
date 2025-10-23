@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Art Color Editor - Web Version</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Pixel Art Color Editor</h1>
+        <div id="status-bar">Select an image to begin.</div>
+    </header>
+
+    <div class="main-content">
+        <!-- Panel Izquierdo: Controles -->
+        <div class="pane left-pane">
+            <h2>Controls</h2>
+            <div class="control-group">
+                <label for="image-loader" class="file-upload-label">Select Image File</label>
+                <input type="file" id="image-loader" accept="image/*">
+                <span id="file-name">No file selected.</span>
+            </div>
+            <div id="adjustments" class="hidden">
+                <hr>
+                <h3>Adjustments</h3>
+                <div class="control-group special-controls">
+                    <input type="checkbox" id="remove-bg"> <label for="remove-bg">Remove BG</label>
+                    <input type="checkbox" id="add-outline"> <label for="add-outline">Add Outline</label>
+                    <input type="checkbox" id="thin-outline"> <label for="thin-outline">Thin Outline</label>
+                </div>
+                <!-- Sliders -->
+                <div class="slider-control">
+                    <label for="outline-thickness">Outline Thickness: <span id="outline-thickness-value">1</span>px</label>
+                    <input type="range" id="outline-thickness" min="1" max="10" value="1" step="1" class="auto-trigger">
+                </div>
+                <div class="slider-control">
+                    <label for="edge-enhance">Enhance Edges: <span id="edge-enhance-value">0</span></label>
+                    <input type="range" id="edge-enhance" min="0" max="100" value="0" class="auto-trigger">
+                </div>
+                <div class="slider-control">
+                    <label for="brightness">Brightness: <span id="brightness-value">0</span></label>
+                    <input type="range" id="brightness" min="-50" max="50" value="0" class="auto-trigger">
+                </div>
+                <div class="slider-control">
+                    <label for="contrast">Contrast: <span id="contrast-value">0</span></label>
+                    <input type="range" id="contrast" min="-50" max="50" value="0" class="auto-trigger">
+                </div>
+                <div class="slider-control">
+                    <label for="saturation">Saturation: <span id="saturation-value">0</span></label>
+                    <input type="range" id="saturation" min="-50" max="50" value="0" class="auto-trigger">
+                </div>
+                <div class="slider-control">
+                    <label for="hue">Hue: <span id="hue-value">0</span></label>
+                    <input type="range" id="hue" min="-50" max="50" value="0" class="auto-trigger">
+                </div>
+                 <div class="slider-control">
+                    <label for="blur-sharpen">Sharpen/Blur: <span id="blur-sharpen-value">0</span></label>
+                    <input type="range" id="blur-sharpen" min="-50" max="50" value="0" class="auto-trigger">
+                </div>
+                 <div class="slider-control">
+                    <label for="dithering">Dithering: <span id="dithering-value">0</span></label>
+                    <input type="range" id="dithering" min="0" max="50" value="0" class="auto-trigger">
+                </div>
+                 <div class="slider-control">
+                    <label for="posterize">Posterize: <span id="posterize-value">0</span></label>
+                    <input type="range" id="posterize" min="0" max="100" value="0" class="auto-trigger">
+                </div>
+                 <div class="slider-control">
+                    <label for="num-colors">Number of Colors: <span id="num-colors-value">50</span></label>
+                    <input type="range" id="num-colors" min="2" max="100" value="50" class="auto-trigger">
+                </div>
+                <div class="process-controls">
+                    <button id="process-btn">Generate Image!</button>
+                    <div class="auto-process-wrapper">
+                        <input type="checkbox" id="auto-process">
+                        <label for="auto-process">Auto-generate</label>
+                    </div>
+                </div>
+                 <div id="loader" class="loader hidden"></div>
+            </div>
+        </div>
+        <!-- Panel Derecho: Previews -->
+        <div class="pane right-pane">
+            <div class="preview-wrapper">
+                <div class="preview-box">
+                    <h3>Original</h3>
+                    <div class="canvas-container">
+                        <canvas id="original-canvas"></canvas>
+                    </div>
+                </div>
+                <div class="preview-box">
+                    <h3>Processed & Editable</h3>
+                    <div id="toolbar">
+                        <!-- Aquí irán los iconos de herramientas -->
+                        <button class="tool-btn active" data-tool="pencil" title="Pencil">✏️</button>
+                        <button class="tool-btn" data-tool="eraser" title="Eraser">🧼</button>
+                        <button class="tool-btn" data-tool="eyedropper" title="Eyedropper">💧</button>
+                    </div>
+                    <div class="canvas-container" id="processed-canvas-container">
+                        <canvas id="processed-canvas"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Panel Inferior: Paletas -->
+    <div class="bottom-pane">
+        <div class="palette-section">
+            <h3>Resulting Color Palette</h3>
+            <div class="palette-container-wrapper">
+                <div id="palette-container"></div>
+            </div>
+        </div>
+        <!-- Futuros paneles para colores removidos, sugerencias, etc. -->
+    </div>
+    
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,204 @@
+/* --- General Body and Layout --- */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: #f0f2f5;
+    color: #333;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+header {
+    padding: 10px 20px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    z-index: 10;
+}
+
+#status-bar {
+    padding: 5px;
+    text-align: center;
+    font-style: italic;
+    color: #555;
+}
+
+.main-content {
+    display: flex;
+    flex: 1; /* Ocupa el espacio restante */
+    padding: 20px;
+    gap: 20px;
+    overflow: hidden; /* Evita que los paneles se salgan */
+}
+
+.pane {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.left-pane {
+    flex: 0 0 380px; /* Ancho fijo */
+    overflow-y: auto; /* Scroll si el contenido es muy alto */
+}
+
+.right-pane {
+    flex: 1; /* Ocupa el espacio restante */
+}
+
+.bottom-pane {
+    padding: 0 20px 20px 20px;
+    background-color: #f0f2f5;
+}
+
+/* --- Controls (Left Pane) --- */
+.control-group { margin-bottom: 15px; }
+.slider-control { margin-bottom: 10px; }
+.slider-control label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.9em;
+}
+input[type="range"] { width: 100%; }
+input[type="file"] { display: none; }
+
+.file-upload-label {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: inline-block;
+}
+.file-upload-label:hover { background-color: #0056b3; }
+#file-name { margin-left: 10px; font-style: italic; color: #555; }
+
+.process-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+#process-btn {
+    flex-grow: 1;
+    padding: 12px;
+    font-size: 1.1em;
+    font-weight: bold;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+#process-btn:hover { background-color: #218838; }
+#process-btn:disabled { background-color: #aaa; cursor: not-allowed; }
+
+.auto-process-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* --- Previews (Right Pane) --- */
+.preview-wrapper {
+    display: flex;
+    gap: 20px;
+    height: 100%;
+}
+.preview-box {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+.canvas-container {
+    width: 100%;
+    flex-grow: 1; /* Ocupa el espacio vertical disponible */
+    background-color: #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 5px;
+    overflow: hidden;
+    position: relative; /* Para el cursor de edición */
+    background-image:
+        linear-gradient(45deg, #ccc 25%, transparent 25%),
+        linear-gradient(-45deg, #ccc 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #ccc 75%),
+        linear-gradient(-45deg, transparent 75%, #ccc 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+}
+
+canvas {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    image-rendering: pixelated; /* ¡Clave para pixel art! */
+}
+
+/* --- Palettes (Bottom Pane) --- */
+.palette-section {
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.palette-container-wrapper {
+    max-height: 120px; /* Limita la altura */
+    overflow-y: auto;
+}
+#palette-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    min-height: 30px;
+}
+.color-swatch {
+    width: 30px;
+    height: 30px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+/* --- Herramientas de Edición --- */
+#toolbar {
+    margin-bottom: 10px;
+    background-color: #f8f9fa;
+    padding: 5px;
+    border-radius: 5px;
+}
+.tool-btn {
+    font-size: 1.2em;
+    padding: 5px 10px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    cursor: pointer;
+}
+.tool-btn.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #0056b3;
+}
+
+/* --- Utilidades --- */
+.hidden { display: none; }
+.loader {
+    border: 5px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 5px solid #3498db;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite;
+    margin: 20px auto 0;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

@@ -4,31 +4,16 @@ body {
     background-color: #f0f2f5;
     color: #333;
     margin: 0;
-    display: flex;
-    flex-direction: column;
     height: 100vh;
+    overflow: hidden; /* Evita scrolls en el body */
 }
 
-header {
-    padding: 10px 20px;
-    background-color: #fff;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    z-index: 10;
-}
-
-#status-bar {
-    padding: 5px;
-    text-align: center;
-    font-style: italic;
-    color: #555;
-}
-
-.main-content {
+.main-container {
     display: flex;
-    flex: 1; /* Ocupa el espacio restante */
+    height: 100%;
     padding: 20px;
     gap: 20px;
-    overflow: hidden; /* Evita que los paneles se salgan */
+    box-sizing: border-box;
 }
 
 .pane {
@@ -41,17 +26,20 @@ header {
 }
 
 .left-pane {
-    flex: 0 0 380px; /* Ancho fijo */
-    overflow-y: auto; /* Scroll si el contenido es muy alto */
+    flex: 0 0 350px; /* Ancho fijo para controles */
+}
+.left-pane header h1 {
+    font-size: 1.5em; /* Título más pequeño */
+    margin: 0 0 15px 0;
+}
+#adjustments {
+    flex: 1;
+    overflow-y: auto; /* Scroll si los controles no caben */
 }
 
 .right-pane {
     flex: 1; /* Ocupa el espacio restante */
-}
-
-.bottom-pane {
-    padding: 0 20px 20px 20px;
-    background-color: #f0f2f5;
+    gap: 20px;
 }
 
 /* --- Controls (Left Pane) --- */
@@ -63,19 +51,6 @@ header {
     font-size: 0.9em;
 }
 input[type="range"] { width: 100%; }
-input[type="file"] { display: none; }
-
-.file-upload-label {
-    background-color: #007bff;
-    color: white;
-    padding: 10px 15px;
-    border-radius: 5px;
-    cursor: pointer;
-    display: inline-block;
-}
-.file-upload-label:hover { background-color: #0056b3; }
-#file-name { margin-left: 10px; font-style: italic; color: #555; }
-
 .process-controls {
     display: flex;
     align-items: center;
@@ -95,7 +70,6 @@ input[type="file"] { display: none; }
 }
 #process-btn:hover { background-color: #218838; }
 #process-btn:disabled { background-color: #aaa; cursor: not-allowed; }
-
 .auto-process-wrapper {
     display: flex;
     align-items: center;
@@ -106,7 +80,8 @@ input[type="file"] { display: none; }
 .preview-wrapper {
     display: flex;
     gap: 20px;
-    height: 100%;
+    flex: 1; /* Ocupa el espacio vertical disponible */
+    min-height: 0; /* Clave para que flexbox funcione bien con overflow */
 }
 .preview-box {
     flex: 1;
@@ -115,14 +90,14 @@ input[type="file"] { display: none; }
 }
 .canvas-container {
     width: 100%;
-    flex-grow: 1; /* Ocupa el espacio vertical disponible */
+    flex-grow: 1;
     background-color: #e9ecef;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 5px;
     overflow: hidden;
-    position: relative; /* Para el cursor de edición */
+    position: relative;
     background-image:
         linear-gradient(45deg, #ccc 25%, transparent 25%),
         linear-gradient(-45deg, #ccc 25%, transparent 25%),
@@ -131,20 +106,42 @@ input[type="file"] { display: none; }
     background-size: 20px 20px;
     background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
 }
-
 canvas {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
-    image-rendering: pixelated; /* ¡Clave para pixel art! */
+    image-rendering: pixelated;
+    display: none; /* Oculto hasta que se carga una imagen */
+}
+canvas.visible {
+    display: block;
 }
 
-/* --- Palettes (Bottom Pane) --- */
+/* --- Nuevo Botón de Carga --- */
+#upload-box {
+    text-align: center;
+}
+#upload-box.hidden {
+    display: none;
+}
+input[type="file"] { display: none; }
+.file-upload-label {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: block; /* Para que ocupe su propia línea */
+    margin-bottom: 10px;
+}
+.file-upload-label:hover { background-color: #0056b3; }
+#file-name { font-style: italic; color: #555; }
+
+
+/* --- Palettes (Ahora en Right Pane) --- */
 .palette-section {
-    background-color: #fff;
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding-top: 15px;
+    border-top: 1px solid #ddd;
 }
 .palette-container-wrapper {
     max-height: 120px; /* Limita la altura */
@@ -154,9 +151,7 @@ canvas {
     display: flex;
     flex-wrap: wrap;
     gap: 5px;
-    padding: 10px;
-    background-color: #f8f9fa;
-    border-radius: 5px;
+    padding-top: 10px;
     min-height: 30px;
 }
 .color-swatch {
@@ -201,4 +196,38 @@ canvas {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+/* --- Estilos para el nuevo header de la paleta --- */
+.palette-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.palette-header h3 {
+    margin: 0;
+}
+
+/* --- Estilo para el botón de descarga --- */
+.action-button {
+    padding: 8px 12px;
+    font-size: 0.9em;
+    font-weight: bold;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.action-button:hover {
+    background-color: #0056b3;
+}
+
+.action-button:disabled {
+    background-color: #aaa;
+    cursor: not-allowed;
 }

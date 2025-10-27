@@ -3,31 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pixel Art Color Editor - Web Version</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Pixel Art Color Editor</title>
+    <link rel="stylesheet" href="../static/style.css">
 </head>
 <body>
-    <header>
-        <h1>Pixel Art Color Editor</h1>
-        <div id="status-bar">Select an image to begin.</div>
-    </header>
-
-    <div class="main-content">
+    <div class="main-container">
         <!-- Panel Izquierdo: Controles -->
         <div class="pane left-pane">
-            <h2>Controls</h2>
-            <div class="control-group">
-                <label for="image-loader" class="file-upload-label">Select Image File</label>
-                <input type="file" id="image-loader" accept="image/*">
-                <span id="file-name">No file selected.</span>
-            </div>
-            <div id="adjustments" class="hidden">
-                <hr>
+            <header>
+                <h1>Controls</h1>
+            </header>
+            <div id="adjustments">
                 <h3>Adjustments</h3>
                 <div class="control-group special-controls">
-                    <input type="checkbox" id="remove-bg"> <label for="remove-bg">Remove BG</label>
-                    <input type="checkbox" id="add-outline"> <label for="add-outline">Add Outline</label>
-                    <input type="checkbox" id="thin-outline"> <label for="thin-outline">Thin Outline</label>
+                    <input type="checkbox" id="remove-bg" class="auto-trigger"> <label for="remove-bg">Remove BG</label>
+                    <input type="checkbox" id="add-outline" class="auto-trigger"> <label for="add-outline">Add Outline</label>
+                    <input type="checkbox" id="thin-outline" class="auto-trigger"> <label for="thin-outline">Thin Outline</label>
                 </div>
                 <!-- Sliders -->
                 <div class="slider-control">
@@ -67,8 +58,8 @@
                     <input type="range" id="posterize" min="0" max="100" value="0" class="auto-trigger">
                 </div>
                  <div class="slider-control">
-                    <label for="num-colors">Number of Colors: <span id="num-colors-value">50</span></label>
-                    <input type="range" id="num-colors" min="2" max="100" value="50" class="auto-trigger">
+                    <label for="num-colors">Number of Colors: <span id="num-colors-value">30</span></label>
+                    <input type="range" id="num-colors" min="2" max="30" value="30" class="auto-trigger">
                 </div>
                 <div class="process-controls">
                     <button id="process-btn">Generate Image!</button>
@@ -80,19 +71,25 @@
                  <div id="loader" class="loader hidden"></div>
             </div>
         </div>
-        <!-- Panel Derecho: Previews -->
+
+        <!-- Panel Derecho: Previews y Paleta -->
         <div class="pane right-pane">
             <div class="preview-wrapper">
                 <div class="preview-box">
                     <h3>Original</h3>
-                    <div class="canvas-container">
+                    <div class="canvas-container" id="original-canvas-container">
+                        <!-- El botón de carga ahora vive aquí -->
+                        <div id="upload-box">
+                            <label for="image-loader" class="file-upload-label">Select Image File</label>
+                            <input type="file" id="image-loader" accept="image/*">
+                            <span id="file-name">No file selected.</span>
+                        </div>
                         <canvas id="original-canvas"></canvas>
                     </div>
                 </div>
                 <div class="preview-box">
                     <h3>Processed & Editable</h3>
                     <div id="toolbar">
-                        <!-- Aquí irán los iconos de herramientas -->
                         <button class="tool-btn active" data-tool="pencil" title="Pencil">✏️</button>
                         <button class="tool-btn" data-tool="eraser" title="Eraser">🧼</button>
                         <button class="tool-btn" data-tool="eyedropper" title="Eyedropper">💧</button>
@@ -102,20 +99,19 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-    
-    <!-- Panel Inferior: Paletas -->
-    <div class="bottom-pane">
-        <div class="palette-section">
-            <h3>Resulting Color Palette</h3>
-            <div class="palette-container-wrapper">
-                <div id="palette-container"></div>
+            <!-- La paleta ahora vive aquí -->
+            <div class="palette-section">
+                <div class="palette-header">
+                    <h3>Resulting Color Palette</h3>
+                    <button id="download-btn" class="action-button" disabled>Download Mapped Image</button>
+                </div>
+                <div class="palette-container-wrapper">
+                    <div id="palette-container"></div>
+                </div>
             </div>
         </div>
-        <!-- Futuros paneles para colores removidos, sugerencias, etc. -->
     </div>
     
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="../static/script.js"></script>
 </body>
 </html>

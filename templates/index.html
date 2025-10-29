@@ -11,39 +11,25 @@
         <!-- Panel Izquierdo: Controles -->
         <div class="pane left-pane">
             <header>
-                <h1>Controls</h1>
+                <h1>Adjustments</h1>
             </header>
             <div id="adjustments">
-                <h3>Adjustments</h3>
-                <div class="control-group special-controls">
-                    <input type="checkbox" id="remove-bg" class="auto-trigger"> <label for="remove-bg">Remove BG</label>
-                    <input type="checkbox" id="add-outline" class="auto-trigger"> <label for="add-outline">Add Outline</label>
-                    <input type="checkbox" id="thin-outline" class="auto-trigger"> <label for="thin-outline">Thin Outline</label>
-                </div>
                 <!-- Sliders -->
                 <div class="slider-control">
-                    <label for="outline-thickness">Outline Thickness: <span id="outline-thickness-value">1</span>px</label>
-                    <input type="range" id="outline-thickness" min="1" max="10" value="1" step="1" class="auto-trigger">
-                </div>
-                <div class="slider-control">
-                    <label for="edge-enhance">Enhance Edges: <span id="edge-enhance-value">0</span></label>
-                    <input type="range" id="edge-enhance" min="0" max="100" value="0" class="auto-trigger">
-                </div>
-                <div class="slider-control">
                     <label for="brightness">Brightness: <span id="brightness-value">0</span></label>
-                    <input type="range" id="brightness" min="-50" max="50" value="0" class="auto-trigger">
+                    <input type="range" id="brightness" min="-150" max="150" value="0" class="auto-trigger">
                 </div>
                 <div class="slider-control">
                     <label for="contrast">Contrast: <span id="contrast-value">0</span></label>
-                    <input type="range" id="contrast" min="-50" max="50" value="0" class="auto-trigger">
+                    <input type="range" id="contrast" min="-50" max="100" value="0" class="auto-trigger">
                 </div>
                 <div class="slider-control">
                     <label for="saturation">Saturation: <span id="saturation-value">0</span></label>
-                    <input type="range" id="saturation" min="-50" max="50" value="0" class="auto-trigger">
+                    <input type="range" id="saturation" min="-100" max="100" value="0" class="auto-trigger">
                 </div>
                 <div class="slider-control">
                     <label for="hue">Hue: <span id="hue-value">0</span></label>
-                    <input type="range" id="hue" min="-50" max="50" value="0" class="auto-trigger">
+                    <input type="range" id="hue" min="-180" max="180" value="0" class="auto-trigger">
                 </div>
                  <div class="slider-control">
                     <label for="blur-sharpen">Sharpen/Blur: <span id="blur-sharpen-value">0</span></label>
@@ -51,11 +37,7 @@
                 </div>
                  <div class="slider-control">
                     <label for="dithering">Dithering: <span id="dithering-value">0</span></label>
-                    <input type="range" id="dithering" min="0" max="50" value="0" class="auto-trigger">
-                </div>
-                 <div class="slider-control">
-                    <label for="posterize">Posterize: <span id="posterize-value">0</span></label>
-                    <input type="range" id="posterize" min="0" max="100" value="0" class="auto-trigger">
+                    <input type="range" id="dithering" min="0" max="100" value="0" class="auto-trigger">
                 </div>
                  <div class="slider-control">
                     <label for="num-colors">Number of Colors: <span id="num-colors-value">30</span></label>
@@ -68,42 +50,64 @@
                         <label for="auto-process">Auto-generate</label>
                     </div>
                 </div>
-                 <div id="loader" class="loader hidden"></div>
+                <div id="loader" class="loader hidden"></div>
+                
+                <!-- CAMBIO: Secciones movidas y con línea divisoria -->
+                <div class="actions-section">
+                    <hr class="divider">
+                    <div class="active-color-section">
+                        <label>Active Color:</label>
+                        <div id="active-color-swatch" title="Current selected color"></div>
+                    </div>
+                    <button id="download-btn" class="action-button" disabled>Download Mapped Image</button>
+                </div>
             </div>
         </div>
 
         <!-- Panel Derecho: Previews y Paleta -->
         <div class="pane right-pane">
+            <div class="previews-header">
+                <div class="header-left">
+                    <h3>Original</h3>
+                </div>
+                <div class="header-right">
+                    <h3>Processed & Editable</h3>
+                    <div id="toolbar">
+                        <button class="tool-btn active" data-tool="pencil" title="Pencil">✏️</button>
+                        <button class="tool-btn" data-tool="bucket" title="Paint Bucket">🎨</button>
+                        <button class="tool-btn" data-tool="eyedropper" title="Eyedropper">💧</button>
+                        <div class="separator"></div>
+                        <button id="undo-btn" class="tool-btn" title="Undo" disabled>↩️</button>
+                        <button id="redo-btn" class="tool-btn" title="Redo" disabled>↪️</button>
+                    </div>
+                    <div class="tool-options">
+                        <input type="checkbox" id="contiguous-check" checked>
+                        <label for="contiguous-check">Contiguous</label>
+                    </div>
+                </div>
+            </div>
+
             <div class="preview-wrapper">
                 <div class="preview-box">
-                    <h3>Original</h3>
                     <div class="canvas-container" id="original-canvas-container">
-                        <!-- El botón de carga ahora vive aquí -->
                         <div id="upload-box">
                             <label for="image-loader" class="file-upload-label">Select Image File</label>
                             <input type="file" id="image-loader" accept="image/*">
-                            <span id="file-name">No file selected.</span>
                         </div>
                         <canvas id="original-canvas"></canvas>
                     </div>
                 </div>
                 <div class="preview-box">
-                    <h3>Processed & Editable</h3>
-                    <div id="toolbar">
-                        <button class="tool-btn active" data-tool="pencil" title="Pencil">✏️</button>
-                        <button class="tool-btn" data-tool="eraser" title="Eraser">🧼</button>
-                        <button class="tool-btn" data-tool="eyedropper" title="Eyedropper">💧</button>
-                    </div>
                     <div class="canvas-container" id="processed-canvas-container">
                         <canvas id="processed-canvas"></canvas>
                     </div>
                 </div>
             </div>
-            <!-- La paleta ahora vive aquí -->
+
+            <!-- CAMBIO: Paleta movida al fondo del panel derecho -->
             <div class="palette-section">
                 <div class="palette-header">
                     <h3>Resulting Color Palette</h3>
-                    <button id="download-btn" class="action-button" disabled>Download Mapped Image</button>
                 </div>
                 <div class="palette-container-wrapper">
                     <div id="palette-container"></div>

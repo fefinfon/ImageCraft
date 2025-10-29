@@ -1,6 +1,6 @@
-// PALETA DE COLORES DMC (Asegúrate de que tu paleta completa esté aquí)
+// --- PALETA DE COLORES ---
+// ¡IMPORTANTE! Pega tu paleta DMC completa aquí.
 const DMC_PALETTE = [
-
     {"code": "DMC-1", "name": "DMC 159,56,69", "r": 159, "g": 56, "b": 69},
     {"code": "DMC-2", "name": "DMC 242,188,197", "r": 242, "g": 188, "b": 197},
     {"code": "DMC-3", "name": "DMC 207,162,150", "r": 207, "g": 162, "b": 150},
@@ -447,9 +447,14 @@ const DMC_PALETTE = [
     {"code": "DMC-444", "name": "DMC 227,228,212", "r": 227, "g": 228, "b": 212},
     {"code": "DMC-445", "name": "DMC 174,161,175", "r": 174, "g": 161, "b": 175}
 ];
+// Matriz de Bayer 4x4
+const BAYER_MATRIX_4X4 = [
+    [0, 8, 2, 10], [12, 4, 14, 6],
+    [3, 11, 1, 9], [15, 7, 13, 5]
+];
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Referencias al DOM (sin cambios)
+    // Referencias al DOM
     const imageLoader = document.getElementById('image-loader');
     const uploadBox = document.getElementById('upload-box');
     const processBtn = document.getElementById('process-btn');
@@ -461,11 +466,48 @@ document.addEventListener('DOMContentLoaded', () => {
     const processedCanvas = document.getElementById('processed-canvas');
     const processedCtx = processedCanvas.getContext('2d');
     const downloadBtn = document.getElementById('download-btn');
+    const undoBtn = document.getElementById('undo-btn');
+    const redoBtn = document.getElementById('redo-btn');
+    const activeColorSwatch = document.getElementById('active-color-swatch');
+    const contiguousCheck = document.getElementById('contiguous-check');
 
     let originalImageObject = null;
     let debounceTimer;
 
-    // --- LÓGICA DE CARGA DE IMAGEN --- (sin cambios)
+    // --- LÓGICA DE HISTORIAL PARA UNDO/REDO ---
+    let history = [];
+    let historyIndex = -1;
+
+    function saveState() {
+        if (historyIndex < history.length - 1) {
+            history = history.slice(0, historyIndex + 1);
+        }
+        history.push(processedCtx.getImageData(0, 0, processedCanvas.width, processedCanvas.height));
+        historyIndex++;
+        updateUndoRedoButtons();
+    }
+    function undo() {
+        if (historyIndex > 0) {
+            historyIndex--;
+            processedCtx.putImageData(history[historyIndex], 0, 0);
+            updateUndoRedoButtons();
+        }
+    }
+    function redo() {
+        if (historyIndex < history.length - 1) {
+            historyIndex++;
+            processedCtx.putImageData(history[historyIndex], 0, 0);
+            updateUndoRedoButtons();
+        }
+    }
+    function updateUndoRedoButtons() {
+        undoBtn.disabled = historyIndex <= 0;
+        redoBtn.disabled = historyIndex >= history.length - 1;
+    }
+    undoBtn.addEventListener('click', undo);
+    redoBtn.addEventListener('click', redo);
+
+    // --- LÓGICA DE CARGA DE IMAGEN ---
     imageLoader.addEventListener('change', (event) => {
         const file = event.target.files[0];
         if (file) {
@@ -480,6 +522,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     drawImageToCanvas(originalCanvas, originalCtx, img);
                     if (autoProcessCheck.checked) {
                         processImageClientSide();
+                    } else {
+                        processedCtx.clearRect(0, 0, processedCanvas.width, processedCanvas.height);
+                        processedCanvas.classList.remove('visible');
+                        downloadBtn.disabled = true;
+                        history = [];
+                        historyIndex = -1;
+                        updateUndoRedoButtons();
                     }
                 };
                 img.src = e.target.result;
@@ -488,46 +537,46 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- FUNCIÓN DE PROCESAMIENTO CON LÓGICA DE MAPEADO MEJORADA ---
-    const processImageClientSide = () => {
-        if (!originalImageObject) { return; }
+    // --- FUNCIÓN DE PROCESAMIENTO PRINCIPAL ---
+    const processImageClientSide = async () => {
+        if (!originalImageObject) return;
         loader.classList.remove('hidden');
         processBtn.disabled = true;
         downloadBtn.disabled = true;
         document.body.style.cursor = 'wait';
-
-        setTimeout(() => {
-            try {
-                const controls = getControlValues();
-                
-                processedCanvas.width = originalImageObject.width;
-                processedCanvas.height = originalImageObject.height;
-                
-                processedCtx.filter = `brightness(${100 + controls.brightness}%) contrast(${100 + controls.contrast}%) saturate(${100 + controls.saturation}%) hue-rotate(${controls.hue * 3.6}deg)`;
-                processedCtx.drawImage(originalImageObject, 0, 0);
-                processedCtx.filter = 'none';
-
-                let imageData = processedCtx.getImageData(0, 0, processedCanvas.width, processedCanvas.height);
-
-                const resultingPalette = mapImageToDMCPalette(imageData, controls.num_colors);
-
-                processedCtx.putImageData(imageData, 0, 0);
-                displayPalette(resultingPalette);
-                drawImageToCanvas(processedCanvas, processedCtx, processedCanvas, false);
-                processedCanvas.classList.add('visible');
-                downloadBtn.disabled = false;
-
-            } catch (error) {
-                alert(`An error occurred: ${error.message}`);
-                console.error(error);
-            } finally {
-                loader.classList.add('hidden');
-                processBtn.disabled = false;
-                document.body.style.cursor = 'default';
-            }
-        }, 10);
+        try {
+            await new Promise(resolve => setTimeout(resolve, 10));
+            const controls = getControlValues();
+            let tempCanvas = document.createElement('canvas');
+            let tempCtx = tempCanvas.getContext('2d');
+            tempCanvas.width = originalImageObject.width;
+            tempCanvas.height = originalImageObject.height;
+            tempCtx.filter = `brightness(${100 + controls.brightness / 1.5}%) contrast(${100 + controls.contrast}%) saturate(${100 + controls.saturation}%) hue-rotate(${controls.hue}deg) blur(${controls.blur_sharpen > 0 ? controls.blur_sharpen / 25 : 0}px)`;
+            tempCtx.drawImage(originalImageObject, 0, 0);
+            tempCtx.filter = 'none';
+            let imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+            if (controls.blur_sharpen < 0) applySharpen(imageData, Math.abs(controls.blur_sharpen) / 50);
+            if (controls.dithering > 0) applyDithering(imageData, controls.dithering / 100);
+            const resultingPalette = mapImageToDMCPalette(imageData, controls.num_colors);
+            processedCanvas.width = imageData.width;
+            processedCanvas.height = imageData.height;
+            processedCtx.putImageData(imageData, 0, 0);
+            displayPalette(resultingPalette);
+            drawImageToCanvas(processedCanvas, processedCtx, processedCanvas, false);
+            processedCanvas.classList.add('visible');
+            history = [];
+            historyIndex = -1;
+            saveState();
+            downloadBtn.disabled = false;
+        } catch (error) {
+            alert(`An error occurred: ${error.message}`);
+            console.error(error);
+        } finally {
+            loader.classList.add('hidden');
+            processBtn.disabled = false;
+            document.body.style.cursor = 'default';
+        }
     };
-    
     processBtn.addEventListener('click', processImageClientSide);
     downloadBtn.addEventListener('click', () => {
         if (!processedCanvas || processedCanvas.width === 0) return;
@@ -537,105 +586,132 @@ document.addEventListener('DOMContentLoaded', () => {
         link.click();
     });
 
-    // --- NUEVA Y MEJORADA LÓGICA DE MAPEADO DE PALETA ---
+    // --- LÓGICA DE HERRAMIENTAS DE EDICIÓN ---
+    const toolbar = document.getElementById('toolbar');
+    let activeTool = 'pencil';
+    let isDrawing = false;
+    let activeColor = 'rgb(0, 0, 0)';
 
-    function colorDistance(color1, color2) {
-        const rDiff = color1.r - color2.r;
-        const gDiff = color1.g - color2.g;
-        const bDiff = color1.b - color2.b;
-        return rDiff * rDiff + gDiff * gDiff + bDiff * bDiff;
+    function setActiveColor(color) {
+        activeColor = color;
+        activeColorSwatch.style.backgroundColor = color;
     }
 
-    function findClosestColorInPalette(r, g, b, palette) {
-        if (!palette || palette.length === 0) return {r:0, g:0, b:0};
-        let closestColor = palette[0];
-        let closestDistance = colorDistance({ r, g, b }, closestColor);
-        for (let i = 1; i < palette.length; i++) {
-            const currentDistance = colorDistance({ r, g, b }, palette[i]);
-            if (currentDistance < closestDistance) {
-                closestDistance = currentDistance;
-                closestColor = palette[i];
-            }
+    toolbar.addEventListener('click', e => {
+        if (e.target.classList.contains('tool-btn') && e.target.dataset.tool) {
+            toolbar.querySelector('.active[data-tool]').classList.remove('active');
+            e.target.classList.add('active');
+            activeTool = e.target.dataset.tool;
         }
-        return closestColor;
-    }
+    });
 
-    function mapImageToDMCPalette(imageData, maxColors) {
-        const data = imageData.data;
-        
-        // Paso 1: Mapear cada píxel a su color DMC más cercano y contar frecuencias
-        const dmcCounts = {};
-        for (let i = 0; i < data.length; i += 4) {
-            if (data[i + 3] === 0) continue;
-            const closestDMC = findClosestColorInPalette(data[i], data[i+1], data[i+2], DMC_PALETTE);
-            const key = `${closestDMC.r},${closestDMC.g},${closestDMC.b}`;
-            dmcCounts[key] = (dmcCounts[key] || 0) + 1;
+    paletteContainer.addEventListener('click', e => {
+        if (e.target.classList.contains('color-swatch')) {
+            setActiveColor(e.target.style.backgroundColor);
         }
+    });
 
-        // Paso 2: Crear la paleta inicial con los colores DMC encontrados
-        let workingPalette = Object.keys(dmcCounts).map(key => {
-            const [r, g, b] = key.split(',').map(Number);
-            return { r, g, b, count: dmcCounts[key] };
-        });
+    const getMousePos = (canvas, evt) => {
+        const rect = canvas.getBoundingClientRect();
+        return {
+            x: (evt.clientX - rect.left) * (canvas.width / rect.width),
+            y: (evt.clientY - rect.top) * (canvas.height / rect.height)
+        };
+    };
+    
+    const draw = (e) => {
+        if (!isDrawing) return;
+        const pos = getMousePos(processedCanvas, e);
+        if (activeTool === 'pencil') {
+            processedCtx.fillStyle = activeColor;
+            processedCtx.fillRect(Math.floor(pos.x), Math.floor(pos.y), 1, 1);
+        } else if (activeTool === 'eyedropper') {
+             const pixelData = processedCtx.getImageData(Math.floor(pos.x), Math.floor(pos.y), 1, 1).data;
+             setActiveColor(`rgb(${pixelData[0]}, ${pixelData[1]}, ${pixelData[2]})`);
+        }
+    };
 
-        // Paso 3: Fusionar colores si la paleta es demasiado grande (EL ALGORITMO INTELIGENTE)
-        while (workingPalette.length > maxColors) {
-            let minDistance = Infinity;
-            let pairToMerge = null;
+    processedCanvas.addEventListener('mousedown', e => {
+        if (e.button !== 0) return;
+        if (activeTool === 'bucket') {
+            const pos = getMousePos(processedCanvas, e);
+            paintBucketFill(Math.floor(pos.x), Math.floor(pos.y));
+        } else {
+            isDrawing = true;
+            draw(e);
+        }
+    });
+    processedCanvas.addEventListener('mousemove', draw);
+    processedCanvas.addEventListener('mouseup', e => {
+        if (e.button !== 0 || !isDrawing) return;
+        isDrawing = false;
+        saveState();
+    });
+    processedCanvas.addEventListener('mouseout', () => {
+        if (isDrawing) {
+            isDrawing = false;
+            saveState();
+        }
+    });
+    processedCanvas.addEventListener('click', e => {
+        if (activeTool === 'eyedropper') draw(e);
+    });
+    
+    // --- NUEVA FUNCIÓN: BOTE DE PINTURA ---
+    function paintBucketFill(startX, startY) {
+        const imageData = processedCtx.getImageData(0, 0, processedCanvas.width, processedCanvas.height);
+        const { data, width, height } = imageData;
+        const startIdx = (startY * width + startX) * 4;
+        const targetColor = [data[startIdx], data[startIdx + 1], data[startIdx + 2]];
 
-            // Encontrar el par de colores más similar en la paleta actual
-            for (let i = 0; i < workingPalette.length; i++) {
-                for (let j = i + 1; j < workingPalette.length; j++) {
-                    const dist = colorDistance(workingPalette[i], workingPalette[j]);
-                    if (dist < minDistance) {
-                        minDistance = dist;
-                        pairToMerge = [workingPalette[i], workingPalette[j]];
+        const replacementColorRgb = activeColor.match(/\d+/g).map(Number);
+        if (targetColor.every((val, i) => val === replacementColorRgb[i])) return;
+
+        if (contiguousCheck.checked) {
+            const queue = [[startX, startY]];
+            const visited = new Set([`${startX},${startY}`]);
+
+            while (queue.length > 0) {
+                const [x, y] = queue.shift();
+                const idx = (y * width + x) * 4;
+                data[idx] = replacementColorRgb[0];
+                data[idx + 1] = replacementColorRgb[1];
+                data[idx + 2] = replacementColorRgb[2];
+
+                [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]].forEach(([nx, ny]) => {
+                    const nKey = `${nx},${ny}`;
+                    if (nx >= 0 && nx < width && ny >= 0 && ny < height && !visited.has(nKey)) {
+                        const nIdx = (ny * width + nx) * 4;
+                        if (data[nIdx] === targetColor[0] && data[nIdx + 1] === targetColor[1] && data[nIdx + 2] === targetColor[2]) {
+                            queue.push([nx, ny]);
+                            visited.add(nKey);
+                        }
                     }
+                });
+            }
+        } else {
+            for (let i = 0; i < data.length; i += 4) {
+                if (data[i] === targetColor[0] && data[i + 1] === targetColor[1] && data[i + 2] === targetColor[2]) {
+                    data[i] = replacementColorRgb[0];
+                    data[i + 1] = replacementColorRgb[1];
+                    data[i + 2] = replacementColorRgb[2];
                 }
             }
-
-            if (!pairToMerge) break; // Salir si no se encuentra un par
-
-            const [color1, color2] = pairToMerge;
-            
-            // Determinar cuál es el color dominante (más píxeles)
-            const dominant = color1.count >= color2.count ? color1 : color2;
-            const other = dominant === color1 ? color2 : color1;
-
-            // Fusionar: el dominante absorbe la cuenta de píxeles del otro
-            dominant.count += other.count;
-            
-            // Eliminar el color no dominante de la paleta
-            workingPalette = workingPalette.filter(c => c !== other);
         }
-
-        const finalPalette = workingPalette;
-
-        // Paso 4: Mapear la imagen final a la paleta reducida e inteligente
-        for (let i = 0; i < data.length; i += 4) {
-            if (data[i + 3] === 0) continue;
-            const finalColor = findClosestColorInPalette(data[i], data[i + 1], data[i + 2], finalPalette);
-            data[i] = finalColor.r;
-            data[i + 1] = finalColor.g;
-            data[i + 2] = finalColor.b;
-        }
-
-        return finalPalette.map(c => `rgb(${c.r}, ${c.g}, ${c.b})`);
+        processedCtx.putImageData(imageData, 0, 0);
+        saveState();
     }
-
+    
+    // --- FUNCIONES DE AYUDA Y PROCESAMIENTO ---
     function getControlValues() {
         const values = {};
         document.querySelectorAll('#adjustments input').forEach(input => {
             const key = input.id.replace(/-/g, '_');
-            if (input.type === 'checkbox') {
-                values[key] = input.checked;
-            } else if (input.type === 'range') {
-                values[key] = parseInt(input.value, 10);
-            }
+            if (input.type === 'checkbox') values[key] = input.checked;
+            else if (input.type === 'range') values[key] = parseInt(input.value, 10);
         });
         return values;
     }
-    
     document.querySelectorAll('.auto-trigger').forEach(control => {
         control.addEventListener('input', () => {
             if (control.type === 'range') {
@@ -648,13 +724,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
-    
     function drawImageToCanvas(canvas, ctx, img, setDimensions = true) {
-        const container = canvas.parentElement;
-        const contW = container.clientWidth;
-        const contH = container.clientHeight;
-        const imgRatio = img.width / img.height;
-        const contRatio = contW / contH;
+        const contW = canvas.parentElement.clientWidth,
+            contH = canvas.parentElement.clientHeight,
+            imgRatio = img.width / img.height,
+            contRatio = contW / contH;
         let drawW, drawH;
         if (imgRatio > contRatio) {
             drawW = contW;
@@ -675,11 +749,11 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.drawImage(img, 0, 0);
         }
     }
-    
     function displayPalette(palette) {
         paletteContainer.innerHTML = '';
         if (!palette || palette.length === 0) {
             paletteContainer.textContent = 'No colors generated.';
+            setActiveColor('rgb(0,0,0)'); // Reset a negro si no hay paleta
             return;
         }
         palette.forEach(colorString => {
@@ -689,5 +763,104 @@ document.addEventListener('DOMContentLoaded', () => {
             swatch.title = colorString;
             paletteContainer.appendChild(swatch);
         });
+        if (palette.length > 0) {
+            setActiveColor(palette[0]);
+        }
+    }
+    function colorDistance(c1, c2) {
+        return (c1.r - c2.r) ** 2 + (c1.g - c2.g) ** 2 + (c1.b - c2.b) ** 2;
+    }
+    function findClosestColorInPalette(r, g, b, palette) {
+        if (!palette || palette.length === 0) return { r: 0, g: 0, b: 0 };
+        let closest = palette[0],
+            minDist = colorDistance({ r, g, b }, closest);
+        for (let i = 1; i < palette.length; i++) {
+            const dist = colorDistance({ r, g, b }, palette[i]);
+            if (dist < minDist) {
+                minDist = dist;
+                closest = palette[i];
+            }
+        }
+        return closest;
+    }
+    function mapImageToDMCPalette(imageData, maxColors) {
+        const data = imageData.data;
+        const dmcCounts = {};
+        for (let i = 0; i < data.length; i += 4) {
+            if (data[i + 3] === 0) continue;
+            const closestDMC = findClosestColorInPalette(data[i], data[i + 1], data[i + 2], DMC_PALETTE);
+            const key = `${closestDMC.r},${closestDMC.g},${closestDMC.b}`;
+            dmcCounts[key] = (dmcCounts[key] || 0) + 1;
+        }
+        let workingPalette = Object.keys(dmcCounts).map(key => {
+            const [r, g, b] = key.split(',').map(Number);
+            return { r, g, b, count: dmcCounts[key] };
+        });
+        while (workingPalette.length > maxColors) {
+            let minDistance = Infinity,
+                pairToMerge = null;
+            for (let i = 0; i < workingPalette.length; i++) {
+                for (let j = i + 1; j < workingPalette.length; j++) {
+                    const dist = colorDistance(workingPalette[i], workingPalette[j]);
+                    if (dist < minDistance) {
+                        minDistance = dist;
+                        pairToMerge = [workingPalette[i], workingPalette[j]];
+                    }
+                }
+            }
+            if (!pairToMerge) break;
+            const [c1, c2] = pairToMerge;
+            const dominant = c1.count >= c2.count ? c1 : c2;
+            const other = dominant === c1 ? c2 : c1;
+            dominant.count += other.count;
+            workingPalette = workingPalette.filter(c => c !== other);
+        }
+        for (let i = 0; i < data.length; i += 4) {
+            if (data[i + 3] === 0) continue;
+            const finalColor = findClosestColorInPalette(data[i], data[i + 1], data[i + 2], workingPalette);
+            data[i] = finalColor.r;
+            data[i + 1] = finalColor.g;
+            data[i + 2] = finalColor.b;
+        }
+        return workingPalette.map(c => `rgb(${c.r}, ${c.g}, ${c.b})`);
+    }
+    function applySharpen(imageData, strength) {
+        const { data, width, height } = imageData;
+        const temp = new Uint8ClampedArray(data);
+        const kernel = [[0, -1, 0], [-1, 5, -1], [0, -1, 0]];
+        for (let y = 1; y < height - 1; y++) {
+            for (let x = 1; x < width - 1; x++) {
+                let r = 0, g = 0, b = 0;
+                for (let ky = -1; ky <= 1; ky++) {
+                    for (let kx = -1; kx <= 1; kx++) {
+                        const i = ((y + ky) * width + (x + kx)) * 4;
+                        const w = kernel[ky + 1][kx + 1];
+                        r += temp[i] * w;
+                        g += temp[i + 1] * w;
+                        b += temp[i + 2] * w;
+                    }
+                }
+                const outI = (y * width + x) * 4;
+                data[outI] = data[outI] * (1 - strength) + r * strength;
+                data[outI + 1] = data[outI + 1] * (1 - strength) + g * strength;
+                data[outI + 2] = data[outI + 2] * (1 - strength) + b * strength;
+            }
+        }
+    }
+    function applyDithering(imageData, strength) {
+        const { data, width, height } = imageData;
+        const matrix = BAYER_MATRIX_4X4,
+            size = 4,
+            factor = 255 / (size * size);
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                const i = (y * width + x) * 4;
+                const threshold = matrix[y % size][x % size];
+                const adj = (threshold - (size * size / 2)) * factor * strength * 2;
+                data[i] = Math.max(0, Math.min(255, data[i] + adj));
+                data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + adj));
+                data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + adj));
+            }
+        }
     }
 });

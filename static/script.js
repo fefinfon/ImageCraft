@@ -471,6 +471,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const activeColorSwatch = document.getElementById('active-color-swatch');
     const contiguousCheck = document.getElementById('contiguous-check');
 
+    // NUEVO: elementos para manejar Compare/vistas
+    const displayArea = document.getElementById('display-area');
+    const headerSingle = document.getElementById('header-single');
+    const headerCompare = document.getElementById('header-compare');
+    const compareBtn = document.getElementById('compare-btn');
+    const compareBtn2 = document.getElementById('compare-btn-2');
+
     let originalImageObject = null;
     let debounceTimer;
 
@@ -479,6 +486,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let historyIndex = -1;
 
     function saveState() {
+        if (processedCanvas.width === 0 || processedCanvas.height === 0) return;
         if (historyIndex < history.length - 1) {
             history = history.slice(0, historyIndex + 1);
         }
@@ -507,29 +515,86 @@ document.addEventListener('DOMContentLoaded', () => {
     undoBtn.addEventListener('click', undo);
     redoBtn.addEventListener('click', redo);
 
+    // --- VISTAS (Single/Compare) ---
+    let compareMode = false;
+    function setCompareMode(on) {
+        compareMode = on;
+        displayArea.classList.toggle('single-view', !on);
+        displayArea.classList.toggle('compare-view', on);
+
+        if (on) {
+            headerSingle.style.display = 'none';
+            headerCompare.classList.add('visible');
+            headerCompare.classList.remove('hidden');
+            processedCanvas.classList.add('visible');
+            originalCanvas.classList.add('visible');
+
+            // Redibujar la imagen original por si no se ve
+            if (originalImageObject) {
+                drawImageToCanvas(originalCanvas, originalCtx, originalImageObject);
+            }
+
+            // Asegurar que solo el canvas izquierdo (procesado) sea editable
+            processedCanvas.style.pointerEvents = 'auto';
+            originalCanvas.style.pointerEvents = 'none';
+        } else {
+            headerSingle.style.display = 'flex';
+            headerCompare.classList.remove('visible');
+            headerCompare.classList.add('hidden');
+            processedCanvas.classList.add('visible');
+
+            // En modo simple también debe ser editable
+            processedCanvas.style.pointerEvents = 'auto';
+            originalCanvas.style.pointerEvents = 'none';
+        }
+
+        // Botones de compare sincronizados
+        if (compareBtn) compareBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        if (compareBtn2) compareBtn2.setAttribute('aria-pressed', on ? 'true' : 'false');
+        
+    }
+
+    // Estado inicial: Single view
+    setCompareMode(false);
+
+    // Botones Compare (ambos encabezados)
+    function toggleCompare() { setCompareMode(!compareMode); }
+    compareBtn?.addEventListener('click', toggleCompare);
+    compareBtn2?.addEventListener('click', toggleCompare);
+
     // --- LÓGICA DE CARGA DE IMAGEN ---
     imageLoader.addEventListener('change', (event) => {
         const file = event.target.files[0];
         if (file) {
             processBtn.disabled = false;
             uploadBox.classList.add('hidden');
-            originalCanvas.classList.add('visible');
+
             const reader = new FileReader();
             reader.onload = (e) => {
                 const img = new Image();
                 img.onload = () => {
                     originalImageObject = img;
+
+                    // Dibuja ORIGINAL inmediatamente en su canvas
                     drawImageToCanvas(originalCanvas, originalCtx, img);
-                    if (autoProcessCheck.checked) {
-                        processImageClientSide();
-                    } else {
-                        processedCtx.clearRect(0, 0, processedCanvas.width, processedCanvas.height);
-                        processedCanvas.classList.remove('visible');
-                        downloadBtn.disabled = true;
-                        history = [];
-                        historyIndex = -1;
-                        updateUndoRedoButtons();
-                    }
+                    originalCanvas.classList.add('visible');
+
+                    // También dibuja la imagen original en el canvas procesado, solo para visualizar antes de procesar
+                    processedCanvas.width = img.width;
+                    processedCanvas.height = img.height;
+                    processedCtx.clearRect(0, 0, processedCanvas.width, processedCanvas.height);
+                    processedCtx.drawImage(img, 0, 0);
+                    drawImageToCanvas(processedCanvas, processedCtx, processedCanvas, false);
+                    processedCanvas.classList.add('visible');
+
+                    // Aún no hay paleta ni descarga hasta que se procese
+                    downloadBtn.disabled = true;
+                    history = [];
+                    historyIndex = -1;
+                    updateUndoRedoButtons();
+
+                    // Vista inicial sigue siendo single-view (izquierda). Si querés ver lado a lado, apretá Compare.
+                    setCompareMode(false);
                 };
                 img.src = e.target.result;
             };
@@ -547,6 +612,8 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             await new Promise(resolve => setTimeout(resolve, 10));
             const controls = getControlValues();
+
+            // Canvas temporal con filtros
             let tempCanvas = document.createElement('canvas');
             let tempCtx = tempCanvas.getContext('2d');
             tempCanvas.width = originalImageObject.width;
@@ -554,16 +621,21 @@ document.addEventListener('DOMContentLoaded', () => {
             tempCtx.filter = `brightness(${100 + controls.brightness / 1.5}%) contrast(${100 + controls.contrast}%) saturate(${100 + controls.saturation}%) hue-rotate(${controls.hue}deg) blur(${controls.blur_sharpen > 0 ? controls.blur_sharpen / 25 : 0}px)`;
             tempCtx.drawImage(originalImageObject, 0, 0);
             tempCtx.filter = 'none';
+
+            // Toma pixeles y aplica sharpen/dither/map a paleta DMC
             let imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
             if (controls.blur_sharpen < 0) applySharpen(imageData, Math.abs(controls.blur_sharpen) / 50);
             if (controls.dithering > 0) applyDithering(imageData, controls.dithering / 100);
             const resultingPalette = mapImageToDMCPalette(imageData, controls.num_colors);
+
+            // Pinta en el canvas procesado
             processedCanvas.width = imageData.width;
             processedCanvas.height = imageData.height;
             processedCtx.putImageData(imageData, 0, 0);
             displayPalette(resultingPalette);
             drawImageToCanvas(processedCanvas, processedCtx, processedCanvas, false);
             processedCanvas.classList.add('visible');
+
             history = [];
             historyIndex = -1;
             saveState();
@@ -578,6 +650,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     processBtn.addEventListener('click', processImageClientSide);
+
     downloadBtn.addEventListener('click', () => {
         if (!processedCanvas || processedCanvas.width === 0) return;
         const link = document.createElement('a');
@@ -599,7 +672,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     toolbar.addEventListener('click', e => {
         if (e.target.classList.contains('tool-btn') && e.target.dataset.tool) {
-            toolbar.querySelector('.active[data-tool]').classList.remove('active');
+            toolbar.querySelector('.active[data-tool]')?.classList.remove('active');
             e.target.classList.add('active');
             activeTool = e.target.dataset.tool;
         }
@@ -618,7 +691,7 @@ document.addEventListener('DOMContentLoaded', () => {
             y: (evt.clientY - rect.top) * (canvas.height / rect.height)
         };
     };
-    
+
     const draw = (e) => {
         if (!isDrawing) return;
         const pos = getMousePos(processedCanvas, e);
@@ -656,7 +729,7 @@ document.addEventListener('DOMContentLoaded', () => {
     processedCanvas.addEventListener('click', e => {
         if (activeTool === 'eyedropper') draw(e);
     });
-    
+
     // --- NUEVA FUNCIÓN: BOTE DE PINTURA ---
     function paintBucketFill(startX, startY) {
         const imageData = processedCtx.getImageData(0, 0, processedCanvas.width, processedCanvas.height);
@@ -701,7 +774,7 @@ document.addEventListener('DOMContentLoaded', () => {
         processedCtx.putImageData(imageData, 0, 0);
         saveState();
     }
-    
+
     // --- FUNCIONES DE AYUDA Y PROCESAMIENTO ---
     function getControlValues() {
         const values = {};

@@ -1,121 +1,155 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pixel Art Color Editor</title>
-    <link rel="stylesheet" href="static/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pixel Art Color Editor</title>
+  <link rel="stylesheet" href="static/style.css"/>
 </head>
 <body>
-    <div class="main-container">
-        <!-- Panel Izquierdo: Controles -->
-        <div class="pane left-pane">
-            <header>
-                <h1>Adjustments</h1>
-            </header>
-            <div id="adjustments">
-                <!-- Sliders -->
-                <div class="slider-control">
-                    <label for="brightness">Brightness: <span id="brightness-value">0</span></label>
-                    <input type="range" id="brightness" min="-150" max="150" value="0" class="auto-trigger">
-                </div>
-                <div class="slider-control">
-                    <label for="contrast">Contrast: <span id="contrast-value">0</span></label>
-                    <input type="range" id="contrast" min="-50" max="100" value="0" class="auto-trigger">
-                </div>
-                <div class="slider-control">
-                    <label for="saturation">Saturation: <span id="saturation-value">0</span></label>
-                    <input type="range" id="saturation" min="-100" max="100" value="0" class="auto-trigger">
-                </div>
-                <div class="slider-control">
-                    <label for="hue">Hue: <span id="hue-value">0</span></label>
-                    <input type="range" id="hue" min="-180" max="180" value="0" class="auto-trigger">
-                </div>
-                 <div class="slider-control">
-                    <label for="blur-sharpen">Sharpen/Blur: <span id="blur-sharpen-value">0</span></label>
-                    <input type="range" id="blur-sharpen" min="-50" max="50" value="0" class="auto-trigger">
-                </div>
-                 <div class="slider-control">
-                    <label for="dithering">Dithering: <span id="dithering-value">0</span></label>
-                    <input type="range" id="dithering" min="0" max="100" value="0" class="auto-trigger">
-                </div>
-                 <div class="slider-control">
-                    <label for="num-colors">Number of Colors: <span id="num-colors-value">30</span></label>
-                    <input type="range" id="num-colors" min="2" max="30" value="30" class="auto-trigger">
-                </div>
-                <div class="process-controls">
-                    <button id="process-btn">Generate Image!</button>
-                    <div class="auto-process-wrapper">
-                        <input type="checkbox" id="auto-process">
-                        <label for="auto-process">Auto-generate</label>
-                    </div>
-                </div>
-                <div id="loader" class="loader hidden"></div>
-                
-                <!-- CAMBIO: Secciones movidas y con línea divisoria -->
-                <div class="actions-section">
-                    <hr class="divider">
-                    <div class="active-color-section">
-                        <label>Active Color:</label>
-                        <div id="active-color-swatch" title="Current selected color"></div>
-                    </div>
-                    <button id="download-btn" class="action-button" disabled>Download Mapped Image</button>
-                </div>
-            </div>
+  <div class="main-container">
+    <!-- Panel Izquierdo -->
+    <div class="pane left-pane">
+      <header>
+        <h1>Adjustments</h1>
+      </header>
+
+      <div id="adjustments">
+        <!-- Sliders -->
+        <div class="slider-control">
+          <label for="brightness">Brightness: <span id="brightness-value">0</span></label>
+          <input type="range" id="brightness" min="-150" max="150" value="0" class="auto-trigger"/>
         </div>
 
-        <!-- Panel Derecho: Previews y Paleta -->
-        <div class="pane right-pane">
-            <div class="previews-header">
-                <div class="header-left">
-                    <h3>Original</h3>
-                </div>
-                <div class="header-right">
-                    <h3>Processed & Editable</h3>
-                    <div id="toolbar">
-                        <button class="tool-btn active" data-tool="pencil" title="Pencil">✏️</button>
-                        <button class="tool-btn" data-tool="bucket" title="Paint Bucket">🎨</button>
-                        <button class="tool-btn" data-tool="eyedropper" title="Eyedropper">💧</button>
-                        <div class="separator"></div>
-                        <button id="undo-btn" class="tool-btn" title="Undo" disabled>↩️</button>
-                        <button id="redo-btn" class="tool-btn" title="Redo" disabled>↪️</button>
-                    </div>
-                    <div class="tool-options">
-                        <input type="checkbox" id="contiguous-check" checked>
-                        <label for="contiguous-check">Contiguous</label>
-                    </div>
-                </div>
-            </div>
-
-            <div class="preview-wrapper">
-                <div class="preview-box">
-                    <div class="canvas-container" id="original-canvas-container">
-                        <div id="upload-box">
-                            <label for="image-loader" class="file-upload-label">Select Image File</label>
-                            <input type="file" id="image-loader" accept="image/*">
-                        </div>
-                        <canvas id="original-canvas"></canvas>
-                    </div>
-                </div>
-                <div class="preview-box">
-                    <div class="canvas-container" id="processed-canvas-container">
-                        <canvas id="processed-canvas"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <!-- CAMBIO: Paleta movida al fondo del panel derecho -->
-            <div class="palette-section">
-                <div class="palette-header">
-                    <h3>Resulting Color Palette</h3>
-                </div>
-                <div class="palette-container-wrapper">
-                    <div id="palette-container"></div>
-                </div>
-            </div>
+        <div class="slider-control">
+          <label for="contrast">Contrast: <span id="contrast-value">0</span></label>
+          <input type="range" id="contrast" min="-50" max="100" value="0" class="auto-trigger"/>
         </div>
+
+        <div class="slider-control">
+          <label for="saturation">Saturation: <span id="saturation-value">0</span></label>
+          <input type="range" id="saturation" min="-100" max="100" value="0" class="auto-trigger"/>
+        </div>
+
+        <div class="slider-control">
+          <label for="hue">Hue: <span id="hue-value">0</span></label>
+          <input type="range" id="hue" min="-180" max="180" value="0" class="auto-trigger"/>
+        </div>
+
+        <div class="slider-control">
+          <label for="blur-sharpen">Sharpen/Blur: <span id="blur-sharpen-value">0</span></label>
+          <input type="range" id="blur-sharpen" min="-50" max="50" value="0" class="auto-trigger"/>
+        </div>
+
+        <div class="slider-control">
+          <label for="dithering">Dithering: <span id="dithering-value">0</span></label>
+          <input type="range" id="dithering" min="0" max="100" value="0" class="auto-trigger"/>
+        </div>
+
+        <div class="slider-control">
+          <label for="num-colors">Number of Colors: <span id="num-colors-value">30</span></label>
+          <input type="range" id="num-colors" min="2" max="30" value="30" class="auto-trigger"/>
+        </div>
+
+        <div class="process-controls">
+          <button id="process-btn">Generate Image!</button>
+          <div class="auto-process-wrapper">
+            <input type="checkbox" id="auto-process"/>
+            <label for="auto-process">Auto-generate</label>
+          </div>
+        </div>
+
+        <div id="loader" class="loader hidden"></div>
+
+        <div class="actions-section">
+          <hr class="divider"/>
+          <div class="active-color-section">
+            <label>Active Color:</label>
+            <div id="active-color-swatch" title="Current selected color"></div>
+          </div>
+          <button id="download-btn" class="action-button" disabled>Download Mapped Image</button>
+        </div>
+      </div>
     </div>
-    
-    <script src="static/script.js"></script>
+
+    <!-- Panel Derecho -->
+    <div class="pane right-pane">
+      <!-- Header: vista normal (una sola) -->
+      <div id="header-single" class="header-row">
+        <div class="header-left">
+          <div id="toolbar" class="toolbar">
+            <button class="tool-btn active" data-tool="pencil" title="Pencil">✏️</button>
+            <button class="tool-btn" data-tool="bucket" title="Paint Bucket">🎨</button>
+            <button class="tool-btn" data-tool="eyedropper" title="Eyedropper">💧</button>
+            <div class="separator"></div>
+            <button id="undo-btn" class="tool-btn" title="Undo" disabled>↩️</button>
+            <button id="redo-btn" class="tool-btn" title="Redo" disabled>↪️</button>
+            <div class="separator"></div>
+            <input type="checkbox" id="contiguous-check" checked/>
+            <label for="contiguous-check">Contiguous</label>
+          </div>
+        </div>
+        <div class="header-right">
+          <button id="compare-btn" class="tool-btn" aria-pressed="false" title="Compare">⇆ Compare</button>
+        </div>
+      </div>
+
+      <!-- Headers: vista Compare (dos cabeceras separadas) -->
+      <div id="header-compare" class="compare-headers hidden">
+        <div class="compare-header left">
+          <div class="toolbar-left">
+            <button class="tool-btn active" data-tool="pencil" title="Pencil">✏️</button>
+            <button class="tool-btn" data-tool="bucket" title="Paint Bucket">🎨</button>
+            <button class="tool-btn" data-tool="eyedropper" title="Eyedropper">💧</button>
+            <div class="separator"></div>
+            <button id="undo-btn-2" class="tool-btn" title="Undo" disabled>↩️</button>
+            <button id="redo-btn-2" class="tool-btn" title="Redo" disabled>↪️</button>
+            <div class="separator"></div>
+            <input type="checkbox" id="contiguous-check-2" checked/>
+            <label for="contiguous-check-2">Contiguous</label>
+          </div>
+          <div class="title-right">Processed Image</div>
+        </div>
+        <div class="compare-header right">
+          <div class="title-left">Original</div>
+          <div class="compare-right">
+            <button id="compare-btn-2" class="tool-btn" aria-pressed="true" title="Compare">⇆ Compare</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ÁREA UNIFICADA -->
+      <div id="display-area" class="display-area single-view">
+        <!-- Carga + Canvas Procesado (edición) -->
+        <div class="canvas-box processed-first">
+          <div class="canvas-container">
+            <div id="upload-box">
+              <label for="image-loader" class="file-upload-label">Select Image File</label>
+              <input type="file" id="image-loader" accept="image/*"/>
+            </div>
+            <canvas id="processed-canvas"></canvas>
+          </div>
+        </div>
+
+        <!-- Canvas Original -->
+        <div class="canvas-box original-second">
+          <div class="canvas-container">
+            <canvas id="original-canvas"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="palette-section">
+        <div class="palette-header">
+          <h3>Resulting Color Palette</h3>
+        </div>
+        <div class="palette-container-wrapper">
+          <div id="palette-container"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="static/script.js"></script>
 </body>
 </html>

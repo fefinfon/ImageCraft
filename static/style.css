@@ -1,10 +1,17 @@
 /* --- Reset Universal --- */
 *, *::before, *::after { box-sizing: border-box; }
 
-/* --- General Body and Layout --- */
-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; color: #333; margin: 0; height: 100vh; overflow: hidden; }
+/* --- General --- */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: #f0f2f5;
+  color: #333;
+  margin: 0;
+  height: 100vh;
+  overflow: hidden;
+}
 .main-container { display: flex; height: 100%; padding: 20px; gap: 20px; }
-.pane { background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
+.pane { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
 
 /* --- Left Pane --- */
 .left-pane { flex: 0 0 330px; }
@@ -14,40 +21,110 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helve
 .slider-control label { display: block; margin-bottom: 5px; font-size: 0.9em; }
 input[type="range"] { width: 100%; }
 .process-controls { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
-#process-btn { width: 100%; padding: 12px; font-size: 1.1em; font-weight: bold; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; }
+#process-btn {
+  width: 100%; padding: 12px; font-size: 1.1em; font-weight: bold;
+  background-color: #28a745; color: #fff; border: none; border-radius: 5px; cursor: pointer;
+}
 #process-btn:hover { background-color: #218838; }
 #process-btn:disabled { background-color: #aaa; cursor: not-allowed; }
 .auto-process-wrapper { display: flex; align-items: center; gap: 5px; }
 
-/* CAMBIO: Secciones de acciones y línea divisoria */
+/* Acciones */
 .actions-section { margin-top: auto; padding-top: 15px; }
 .divider { border: none; border-top: 1px solid #eee; margin: 0 0 15px 0; }
 .active-color-section { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
 .active-color-section label { font-weight: bold; }
 #active-color-swatch { width: 40px; height: 40px; border: 2px solid #ccc; border-radius: 5px; background-color: #000; }
-.action-button { width: 100%; padding: 8px 12px; font-size: 0.9em; font-weight: bold; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; transition: background-color 0.2s; }
+.action-button {
+  width: 100%; padding: 8px 12px; font-size: 0.9em; font-weight: bold;
+  background-color: #007bff; color: #fff; border: none; border-radius: 5px; cursor: pointer;
+  transition: background-color 0.2s;
+}
 .action-button:hover { background-color: #0056b3; }
 .action-button:disabled { background-color: #aaa; cursor: not-allowed; }
 
 /* --- Right Pane --- */
 .right-pane { flex: 1; gap: 15px; }
-.previews-header { display: flex; gap: 20px; align-items: center; }
-.header-left, .header-right { flex: 1; display: flex; justify-content: space-between; align-items: center; min-height: 40px; }
-.header-left h3, .header-right h3 { margin: 0; font-size: 1.2em; }
-.preview-wrapper { display: flex; gap: 20px; flex: 1; min-height: 0; }
-.preview-box { flex: 1; display: flex; flex-direction: column; }
-.canvas-container { width: 100%; flex-grow: 1; background-color: #e9ecef; display: flex; align-items: center; justify-content: center; border-radius: 5px; overflow: hidden; position: relative; background-image: linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%); background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px; }
+
+/* Header single (normal) */
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.header-left .toolbar { display: flex; align-items: center; gap: 5px; }
+.header-right { display: flex; justify-content: flex-end; }
+
+/* Compare headers (dos cabeceras) */
+.compare-headers { display: none; gap: 20px; margin-bottom: 6px; }
+.compare-headers.visible { display: grid; grid-template-columns: 1fr 1fr; align-items: center; }
+.compare-header { display: flex; justify-content: space-between; align-items: center; }
+.compare-header .toolbar-left { display: flex; align-items: center; gap: 5px; }
+.compare-header .title-right, .compare-header .title-left { font-weight: 600; }
+
+/* Botones y elementos de toolbar */
+.tool-btn { font-size: 1.2em; padding: 5px 10px; border: 1px solid #ccc; background-color: #fff; cursor: pointer; }
+.tool-btn.active { background-color: #007bff; color: #fff; border-color: #0056b3; }
+.tool-btn[aria-pressed="true"] { background-color: #ffc107; border-color: #d39e00; }
+.tool-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.separator { width: 1px; height: 20px; background-color: #ccc; margin: 0 5px; }
+
+/* --- Área unificada --- */
+.display-area { display: flex; gap: 20px; flex: 1; min-height: 0; }
+
+/* Single view = solo un canvas visible */
+.display-area.single-view .canvas-box.original-second { display: none; }
+
+/* Compare view = dos canvas lado a lado (procesada izquierda, original derecha) */
+.display-area.compare-view .canvas-box.original-second { display: flex; }
+
+.canvas-box { flex: 1; display: flex; flex-direction: column; }
+.canvas-container {
+  width: 100%; flex-grow: 1; background-color: #e9ecef; display: flex; align-items: center; justify-content: center;
+  border-radius: 5px; overflow: hidden; position: relative;
+  background-image: linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%),
+                    linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%);
+  background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+}
+
+/* Canvases */
 canvas { max-width: 100%; max-height: 100%; object-fit: contain; image-rendering: pixelated; display: none; }
 canvas.visible { display: block; }
+/* Permitir edición solo sobre el canvas izquierdo en modo Compare */
+.display-area.compare-view #processed-canvas {
+  pointer-events: auto;
+}
+.display-area.compare-view #original-canvas {
+  pointer-events: none;
+}
+/* Asegurar que las herramientas sigan siendo clickeables en modo Compare */
+.display-area.compare-view #toolbar button,
+.display-area.compare-view #undo-btn,
+.display-area.compare-view #redo-btn {
+  pointer-events: auto !important;
+  opacity: 1;
+}
 
-/* --- Botón de Carga --- */
+/* Prevenir que overlays u otros divs bloqueen eventos */
+.display-area.compare-view * {
+  z-index: 0;
+}
+.display-area.compare-view #processed-canvas,
+.display-area.compare-view #toolbar,
+.display-area.compare-view #undo-btn,
+.display-area.compare-view #redo-btn {
+  z-index: 1;
+}
+
+/* Upload */
 #upload-box { text-align: center; }
 #upload-box.hidden { display: none; }
 input[type="file"] { display: none; }
-.file-upload-label { background-color: #007bff; color: white; padding: 10px 15px; border-radius: 5px; cursor: pointer; display: block; }
+.file-upload-label { background-color: #007bff; color: #fff; padding: 10px 15px; border-radius: 5px; cursor: pointer; display: block; }
 .file-upload-label:hover { background-color: #0056b3; }
 
-/* CAMBIO: Paleta al fondo, con botón de descarga removido de aquí */
+/* Paleta */
 .palette-section { padding-top: 15px; border-top: 1px solid #ddd; }
 .palette-header { margin-bottom: 10px; }
 .palette-header h3 { margin: 0; }
@@ -55,15 +132,7 @@ input[type="file"] { display: none; }
 #palette-container { display: flex; flex-wrap: wrap; gap: 5px; min-height: 30px; }
 .color-swatch { width: 30px; height: 30px; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; }
 
-/* --- Herramientas de Edición --- */
-#toolbar { display: flex; align-items: center; gap: 5px; }
-.tool-btn { font-size: 1.2em; padding: 5px 10px; border: 1px solid #ccc; background-color: #fff; cursor: pointer; }
-.tool-btn.active { background-color: #007bff; color: white; border-color: #0056b3; }
-.separator { width: 1px; height: 20px; background-color: #ccc; margin: 0 5px; }
-.tool-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.tool-options { display: flex; align-items: center; gap: 5px; font-size: 0.9em; }
-
-/* --- Utilidades --- */
-.hidden { display: none; }
+/* Utilidades */
+.hidden { display: none !important; }
 .loader { border: 5px solid #f3f3f3; border-radius: 50%; border-top: 5px solid #3498db; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto 0; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }

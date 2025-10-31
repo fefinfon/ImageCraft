@@ -98,24 +98,6 @@ canvas.visible { display: block; }
 .display-area.compare-view #original-canvas {
   pointer-events: none;
 }
-/* Asegurar que las herramientas sigan siendo clickeables en modo Compare */
-.display-area.compare-view #toolbar button,
-.display-area.compare-view #undo-btn,
-.display-area.compare-view #redo-btn {
-  pointer-events: auto !important;
-  opacity: 1;
-}
-
-/* Prevenir que overlays u otros divs bloqueen eventos */
-.display-area.compare-view * {
-  z-index: 0;
-}
-.display-area.compare-view #processed-canvas,
-.display-area.compare-view #toolbar,
-.display-area.compare-view #undo-btn,
-.display-area.compare-view #redo-btn {
-  z-index: 1;
-}
 
 /* Upload */
 #upload-box { text-align: center; }
